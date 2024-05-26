@@ -6,6 +6,7 @@ from utils import access_nested_map
 from unittest.mock import patch, Mock, PropertyMock
 from utils import get_json, memoize
 from client import GithubOrgClient
+import fixtures
 
 
 class TestAccessNestedMap(unittest.TestCase):
@@ -146,6 +147,55 @@ class TestMemoize(unittest.TestCase):
             # Check that the results are correct
             self.assertEqual(result1, 42)
             self.assertEqual(result2, 42)
+
+
+@parameterized_class([
+    {"org_payload": fixtures.org_payload,
+     "repos_payload": fixtures.repos_payload,
+     "expected_repos": fixtures.expected_repos,
+     "apache2_repos": fixtures.apache2_repos}
+])
+class TestIntegrationGithubOrgClient(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        """Set up class method to mock requests.get"""
+        cls.get_patcher = patch('requests.get', autospec=True)
+
+        # Start patcher
+        cls.mock_get = cls.get_patcher.start()
+
+        # Setup side_effect
+        def get_json_side_effect(url):
+            if url == "https://api.github.com/orgs/google":
+                return Mock(json=lambda: cls.org_payload)
+            elif url == "https://api.github.com/orgs/google/repos":
+                return Mock(json=lambda: cls.repos_payload)
+            return Mock(json=lambda: {})
+
+        cls.mock_get.side_effect = get_json_side_effect
+
+        @classmethod
+    def tearDownClass(cls):
+        """Tear down class method to stop the patcher"""
+        cls.get_patcher.stop()
+
+    @parameterized.expand([
+        (fixtures.expected_repos,),
+    ])
+    def test_public_repos(self, expected_repos):
+        """Test public_repos method"""
+        client = GithubOrgClient("google")
+        result = client.public_repos()
+        self.assertEqual(result, expected_repos)
+
+    @parameterized.expand([
+        (fixtures.apache2_repos,),
+    ])
+    def test_public_repos_with_license(self, expected_repos):
+        """Test public_repos method with license"""
+        client = GithubOrgClient("google")
+        result = client.public_repos(license="apache-2.0")
+        self.assertEqual(result, expected_repos)
 
 
 if __name__ == '__main__':

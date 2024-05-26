@@ -174,7 +174,7 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
 
         cls.mock_get.side_effect = get_json_side_effect
 
-        @classmethod
+    @classmethod
     def tearDownClass(cls):
         """Tear down class method to stop the patcher"""
         cls.get_patcher.stop()

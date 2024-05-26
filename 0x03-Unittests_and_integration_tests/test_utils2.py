@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Unittesting"""
+""" Unittesting """
 import unittest
-from parameterized import parameterized, parameterized_class
+from parameterized import parameterized
 from utils import access_nested_map
 from unittest.mock import patch, Mock, PropertyMock
 from utils import get_json, memoize
@@ -10,30 +10,31 @@ import fixtures
 
 
 class TestAccessNestedMap(unittest.TestCase):
-    """Parameterized tests"""
+    """ Parameterized tests """
 
     @parameterized.expand([
         ({"a": 1}, ("a",), 1),
         ({"a": {"b": 2}}, ("a",), {"b": 2}),
         ({"a": {"b": 2}}, ("a", "b"), 2),
     ])
+
     def test_access_nested_map(self, nested_map, path, expected_result):
-        """Test the nested map function"""
+        """ Test the nested map function """
         self.assertEqual(access_nested_map(nested_map, path), expected_result)
 
     @parameterized.expand([
         ({}, ("a",)),
         ({"a": 1}, ("a", "b")),
     ])
+
     def test_access_nested_map_exception(self, nested_map, path):
-        """Test for keyError"""
+        """ Test for keyError """
         with self.assertRaises(KeyError) as cm:
             access_nested_map(nested_map, path)
         self.assertEqual(str(cm.exception), repr(path[-1]))
 
-
 class TestGetJson(unittest.TestCase):
-    """Test Get JSON"""
+    """ Test Get JSON """
 
     @parameterized.expand([
         ("http://example.com", {"payload": True}),
@@ -59,7 +60,7 @@ class TestGetJson(unittest.TestCase):
 
 
 class TestGithubOrgClient(unittest.TestCase):
-    """TestGithubOrgClient"""
+    """ TestGithubOrgClient """
 
     @parameterized.expand([
         ("google",),
@@ -67,7 +68,7 @@ class TestGithubOrgClient(unittest.TestCase):
     ])
     @patch('client.get_json')
     def test_org(self, org_name, mock_get_json):
-        """Test Org"""
+        """ Test Org """
         test_payload = {"payload": True}
         mock_get_json.return_value = test_payload
 
@@ -89,7 +90,7 @@ class TestGithubOrgClient(unittest.TestCase):
 
     @patch('client.get_json')
     def test_public_repos(self, mock_get_json):
-        """Test public_repos"""
+        """ Test pub reops """
         test_payload = [
             {"name": "repo1"},
             {"name": "repo2"},
@@ -112,25 +113,25 @@ class TestGithubOrgClient(unittest.TestCase):
         ({"license": {"key": "other_license"}}, "my_license", False),
     ])
     def test_has_license(self, repo, license_key, expected):
-        """Test has_license"""
+        """ Test license """
         result = GithubOrgClient.has_license(repo, license_key)
         self.assertEqual(result, expected)
 
 
 class TestMemoize(unittest.TestCase):
-    """Test Memoize"""
+    """ Test Memoize """
 
     def test_memoize(self):
-        """Test Memoize"""
+        """ Test Memoize """
         class TestClass:
-            """Test class"""
+            "Test class """
             def a_method(self):
-                """a_method"""
+                """ a_method """
                 return 42
 
             @memoize
             def a_property(self):
-                """a_property"""
+                """ a_property """
                 return self.a_method()
 
         with patch.object(TestClass, 'a_method', return_value=42) as mock_method:
@@ -178,17 +179,23 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         """Tear down class method to stop the patcher"""
         cls.get_patcher.stop()
 
-    def test_public_repos(self):
+    @parameterized.expand([
+        (fixtures.expected_repos,),
+    ])
+    def test_public_repos(self, expected_repos):
         """Test public_repos method"""
         client = GithubOrgClient("google")
         result = client.public_repos()
-        self.assertEqual(result, self.expected_repos)
+        self.assertEqual(result, expected_repos)
 
-    def test_public_repos_with_license(self):
+    @parameterized.expand([
+        (fixtures.apache2_repos,),
+    ])
+    def test_public_repos_with_license(self, expected_repos):
         """Test public_repos method with license"""
         client = GithubOrgClient("google")
         result = client.public_repos(license="apache-2.0")
-        self.assertEqual(result, self.apache2_repos)
+        self.assertEqual(result, expected_repos)
 
 
 if __name__ == '__main__':

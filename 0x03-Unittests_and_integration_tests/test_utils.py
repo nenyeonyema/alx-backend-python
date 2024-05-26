@@ -31,19 +31,20 @@ class TestAccessNestedMap(unittest.TestCase):
             access_nested_map(nested_map, path)
         self.assertEqual(str(cm.exception), repr(path[-1]))
 
-
 class TestGetJson(unittest.TestCase):
     """ Test Get JSON """
-    @patch('utils.requests.get')
+
     @parameterized.expand([
         ("http://example.com", {"payload": True}),
         ("http://holberton.io", {"payload": False}),
     ])
+    @patch('utils.requests.get')
     def test_get_json(self, test_url, test_payload, mock_get):
         """
         Set up the mock to return a response with
         the test_payload as its JSON data
         """
+        # Set up the mock to return a response with the test_payload as its JSON data
         mock_response = Mock()
         mock_response.json.return_value = test_payload
         mock_get.return_value = mock_response
@@ -58,10 +59,13 @@ class TestGetJson(unittest.TestCase):
 
 class TestMemoize(unittest.TestCase):
     """ Test Memoize """
+
     def test_memoize(self):
-        """Test Memoize """
+        """ Test Memoize """
+
+
         class TestClass:
-            """ Test Class """
+            "Test class """
             def a_method(self):
                 """ a_method """
                 return 42
@@ -73,14 +77,14 @@ class TestMemoize(unittest.TestCase):
 
         with patch.object(TestClass, 'a_method', return_value=42) as mock_method:
             obj = TestClass()
-
+            
             # Call a_property twice
             result1 = obj.a_property
             result2 = obj.a_property
-
+            
             # Check that a_method was only called once
             mock_method.assert_called_once()
-
+            
             # Check that the results are correct
             self.assertEqual(result1, 42)
             self.assertEqual(result2, 42)

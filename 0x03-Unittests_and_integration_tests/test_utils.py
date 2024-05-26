@@ -3,7 +3,7 @@
 import unittest
 from parameterized import parameterized
 from utils import access_nested_map
-from unittest.mock import patch, Mock, PropertyMock
+from unittest.mock import patch
 from utils import get_json, memoize
 from client import GithubOrgClient
 
